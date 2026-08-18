@@ -1,0 +1,41 @@
+name: Build Riddle for reMarkable 1
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - "README*.md"
+
+jobs:
+  build-rm1:
+    runs-on: ubuntu-latest
+    container:
+      # v4.0 = glibc 2.35 / Linux headers 6.1.55, matching reMarkable OS
+      # >= 3.18.2.3 (covers the 3.27.x target in README-RM1.md).
+      image: ghcr.io/toltec-dev/rust:v4.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show toolchain versions
+        run: |
+          rustc --version
+          cargo --version
+          arm-remarkable-linux-gnueabihf-gcc --version || arm-linux-gnueabihf-gcc --version || true
+
+      - name: Build (armv7-unknown-linux-gnueabihf, release)
+        run: ./build-rm1.sh
+
+      - name: Verify binary architecture
+        run: file dist/rm1/riddle
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: riddle-rm1
+          path: |
+            dist/rm1/riddle
+            dist/rm1/riddle-rm1.sh
+            dist/rm1/oracle.env.example
+          if-no-files-found: error
