@@ -18,15 +18,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select default rustup toolchain
+      - name: Configure Rust toolchain PATH
         run: |
+          set -x
+          echo "PATH before: $PATH"
+          echo "--- looking for rustup/cargo state ---"
+          for d in /root/.rustup /root/.cargo /usr/local/rustup /usr/local/cargo /opt/rustup /opt/cargo; do
+            [ -e "$d" ] && echo "exists: $d" && ls -la "$d" 2>/dev/null | head -5
+          done
+          echo "--- searching filesystem for a real toolchain bin dir ---"
+          TOOLCHAIN_BIN=$(find / -xdev -maxdepth 8 -type d -path "*/toolchains/*/bin" 2>/dev/null | head -n1)
+          echo "Found: ${TOOLCHAIN_BIN:-none}"
+          if [ -n "$TOOLCHAIN_BIN" ]; then
+            echo "$TOOLCHAIN_BIN" >> "$GITHUB_PATH"
+          fi
+          echo "--- searching for cargo home bin dir ---"
+          CARGO_BIN=$(find / -xdev -maxdepth 6 -type d -path "*/.cargo/bin" -o -path "*cargo/bin" 2>/dev/null | head -n1)
+          echo "Found cargo bin: ${CARGO_BIN:-none}"
+          if [ -n "$CARGO_BIN" ]; then
+            echo "$CARGO_BIN" >> "$GITHUB_PATH"
+          fi
           if command -v rustup >/dev/null 2>&1; then
-            echo "Installed toolchains:"
-            rustup toolchain list
-            # Pick whichever toolchain is already installed in the image
-            # (the toltec rust image ships nightly but doesn't set a default).
-            TOOLCHAIN=$(rustup toolchain list | head -n1 | awk '{print $1}')
-            rustup default "$TOOLCHAIN"
+            echo "--- rustup toolchain list ---"
+            rustup toolchain list || true
+            rustup default nightly 2>&1 || rustup default stable 2>&1 || true
           fi
 
       - name: Show toolchain versions
