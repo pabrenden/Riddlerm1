@@ -16,8 +16,8 @@ impl Display {
             let mut client = crate::qtfb::QtfbClient::connect(
                 key,
                 crate::qtfb::FBFMT_RMPP_RGB565,
-                crate::fb::SCREEN_W as i32,
-                crate::fb::SCREEN_H as i32,
+                crate::fb::SCREEN_W,
+                crate::fb::SCREEN_H,
                 2,
             )?;
             let _ = client.set_refresh_mode(crate::qtfb::REFRESH_MODE_UFAST);
