@@ -67,7 +67,13 @@ jobs:
         run: ./build-rm1.sh
 
       - name: Verify binary architecture
-        run: file dist/rm1/riddle
+        run: |
+          ls -la dist/rm1/riddle
+          if command -v file >/dev/null 2>&1; then
+            file dist/rm1/riddle
+          else
+            readelf -h dist/rm1/riddle | grep -E "Class|Machine|Type" || od -An -tx1 -N20 dist/rm1/riddle
+          fi
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
