@@ -325,7 +325,14 @@ fn run() -> std::io::Result<()> {
 
         // ---- raw pen (preferred path) ----
         if let Some(ref mut pdev) = pen_dev {
+            let debug_pen = std::env::var_os("RIDDLE_DEBUG_PEN").is_some();
             for s in pdev.drain() {
+                if debug_pen {
+                    eprintln!(
+                        "riddle: pen sample x={} y={} pressure={} touching={} proximity={} tool={:?}",
+                        s.x, s.y, s.pressure, s.touching, s.proximity, s.tool
+                    );
+                }
                 let writing = s.touching && s.pressure > 40;
                 stylus_on = writing;
                 stylus_tapped |= writing;
