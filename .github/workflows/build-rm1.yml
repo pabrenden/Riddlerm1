@@ -44,6 +44,19 @@ jobs:
             rustup default nightly 2>&1 || rustup default stable 2>&1 || true
           fi
 
+      - name: Configure ARMv7 cross-compiler PATH
+        run: |
+          set -x
+          echo "--- searching for the ARM cross-compiler ---"
+          GCC_BIN=$(find / -xdev -maxdepth 8 -type f \( -name "arm-remarkable-linux-gnueabihf-gcc" -o -name "arm-linux-gnueabihf-gcc" \) 2>/dev/null | head -n1)
+          echo "Found gcc: ${GCC_BIN:-none}"
+          if [ -n "$GCC_BIN" ]; then
+            dirname "$GCC_BIN" >> "$GITHUB_PATH"
+          else
+            echo "No cross gcc found anywhere on the image filesystem."
+            find / -xdev -maxdepth 6 -iname "*x-tools*" -type d 2>/dev/null
+          fi
+
       - name: Show toolchain versions
         run: |
           rustc --version
