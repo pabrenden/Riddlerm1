@@ -18,6 +18,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Select default rustup toolchain
+        run: |
+          if command -v rustup >/dev/null 2>&1; then
+            echo "Installed toolchains:"
+            rustup toolchain list
+            # Pick whichever toolchain is already installed in the image
+            # (the toltec rust image ships nightly but doesn't set a default).
+            TOOLCHAIN=$(rustup toolchain list | head -n1 | awk '{print $1}')
+            rustup default "$TOOLCHAIN"
+          fi
+
       - name: Show toolchain versions
         run: |
           rustc --version
